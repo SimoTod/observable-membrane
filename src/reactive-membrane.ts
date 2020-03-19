@@ -60,12 +60,7 @@ function defaultValueIsObservable(value: any): boolean {
         return false;
     }
 
-    if (isArray(value)) {
-        return true;
-    }
-
-    const proto = getPrototypeOf(value);
-    return (proto === ObjectDotPrototype || proto === null || getPrototypeOf(proto) === null);
+    return true;
 }
 
 const defaultValueObserved: ReactiveMembraneAccessCallback = (obj: any, key: PropertyKey) => {
