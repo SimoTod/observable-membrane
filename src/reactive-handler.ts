@@ -68,6 +68,9 @@ export class ReactiveProxyHandler {
         const value = originalTarget[key];
         const { valueObserved } = membrane;
         valueObserved(originalTarget, key);
+        if(!isArray(originalTarget) && typeof value === 'function' && !originalTarget.hasOwnProperty(key)) {
+            return value.bind(originalTarget)
+        }
         return membrane.getProxy(value);
     }
     set(shadowTarget: ReactiveMembraneShadowTarget, key: PropertyKey, value: any): boolean {
