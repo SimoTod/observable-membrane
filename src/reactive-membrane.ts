@@ -2,6 +2,7 @@ import {
     ObjectDefineProperty,
     unwrap,
     isArray,
+    isFunction,
     isObject,
     isUndefined,
     getPrototypeOf,
@@ -29,12 +30,14 @@ export type ReactiveMembraneAccessCallback = (obj: any, key: PropertyKey) => voi
 export type ReactiveMembraneMutationCallback = (obj: any, key: PropertyKey) => void;
 export type ReactiveMembraneDistortionCallback = (value: any) => any;
 export type ReactiveMembraneObservableCallback = (value: any) => boolean;
+export type ReactiveMembraneCallableCallback = (obj: any, context: any, args: any) => void;
 
 export interface ObservableMembraneInit {
     valueMutated?: ReactiveMembraneMutationCallback;
     valueObserved?: ReactiveMembraneAccessCallback;
     valueDistortion?: ReactiveMembraneDistortionCallback;
     valueIsObservable?: ReactiveMembraneObservableCallback;
+    functionCalled?:  ReactiveMembraneCallableCallback;
 }
 
 function createShadowTarget(value: any): ReactiveMembraneShadowTarget {
@@ -43,6 +46,8 @@ function createShadowTarget(value: any): ReactiveMembraneShadowTarget {
         shadowTarget = [];
     } else if (isObject(value)) {
         shadowTarget = {};
+    } else if (isFunction(value)) {
+        shadowTarget = () => {};
     }
     return shadowTarget as ReactiveMembraneShadowTarget;
 }
@@ -56,7 +61,7 @@ function defaultValueIsObservable(value: any): boolean {
     }
 
     // treat all non-object types, including undefined, as non-observable values
-    if (typeof value !== 'object') {
+    if (typeof value !== 'object' && typeof value !== 'function') {
         return false;
     }
 
@@ -70,6 +75,10 @@ const defaultValueMutated: ReactiveMembraneMutationCallback = (obj: any, key: Pr
     /* do nothing */
 };
 const defaultValueDistortion: ReactiveMembraneDistortionCallback = (value: any) => value;
+
+const defaultFunctionCalled: ReactiveMembraneCallableCallback = (obj: any, context: any, args: any) => {
+    /* do nothing */
+}
 
 export function wrapDescriptor(membrane: ReactiveMembrane, descriptor: PropertyDescriptor, getValue: (membrane: ReactiveMembrane, originalValue: any) => any): PropertyDescriptor {
     const { set, get } = descriptor;
@@ -101,15 +110,17 @@ export class ReactiveMembrane {
     valueMutated: ReactiveMembraneMutationCallback = defaultValueMutated;
     valueObserved: ReactiveMembraneAccessCallback = defaultValueObserved;
     valueIsObservable: ReactiveMembraneObservableCallback = defaultValueIsObservable;
+    functionCalled: ReactiveMembraneCallableCallback = defaultFunctionCalled;
     private objectGraph: WeakMap<any, ReactiveState> = new WeakMap();
 
     constructor(options?: ObservableMembraneInit) {
         if (!isUndefined(options)) {
-            const { valueDistortion, valueMutated, valueObserved, valueIsObservable } = options;
+            const { valueDistortion, valueMutated, valueObserved, valueIsObservable, functionCalled } = options;
             this.valueDistortion = isFunction(valueDistortion) ? valueDistortion : defaultValueDistortion;
             this.valueMutated = isFunction(valueMutated) ? valueMutated : defaultValueMutated;
             this.valueObserved = isFunction(valueObserved) ? valueObserved : defaultValueObserved;
             this.valueIsObservable = isFunction(valueIsObservable) ? valueIsObservable : defaultValueIsObservable;
+            this.functionCalled = isFunction(functionCalled) ? functionCalled : defaultFunctionCalled;
         }
     }
 

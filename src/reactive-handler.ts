@@ -68,9 +68,6 @@ export class ReactiveProxyHandler {
         const value = originalTarget[key];
         const { valueObserved } = membrane;
         valueObserved(originalTarget, key);
-        if(!isArray(originalTarget) && typeof value === 'function' && !originalTarget.hasOwnProperty(key)) {
-            return value.bind(originalTarget)
-        }
         return membrane.getProxy(value);
     }
     set(shadowTarget: ReactiveMembraneShadowTarget, key: PropertyKey, value: any): boolean {
@@ -95,7 +92,15 @@ export class ReactiveProxyHandler {
         return true;
     }
     apply(shadowTarget: ReactiveMembraneShadowTarget, thisArg: any, argArray: any[]) {
-        /* No op */
+        const { originalTarget, membrane } = this;
+        const originalThis = unwrap(thisArg);
+        // Should array be an exception, though?
+        if (isArray(originalThis)) {
+            return Reflect.apply(originalTarget, thisArg, argArray);
+        }
+        const { functionCalled } = membrane;
+        functionCalled(originalTarget, originalThis, argArray);
+        return Reflect.apply(originalTarget, originalThis, argArray);
     }
     construct(target: ReactiveMembraneShadowTarget, argArray: any, newTarget?: any): any {
         /* No op */
