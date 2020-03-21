@@ -47,7 +47,8 @@ function createShadowTarget(value: any): ReactiveMembraneShadowTarget {
     } else if (isObject(value)) {
         shadowTarget = {};
     } else if (isFunction(value)) {
-        shadowTarget = () => {};
+        const args = Array(value.length)
+        shadowTarget = (...args) => {};
     }
     return shadowTarget as ReactiveMembraneShadowTarget;
 }
