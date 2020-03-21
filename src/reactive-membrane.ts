@@ -30,7 +30,7 @@ export type ReactiveMembraneAccessCallback = (obj: any, key: PropertyKey) => voi
 export type ReactiveMembraneMutationCallback = (obj: any, key: PropertyKey) => void;
 export type ReactiveMembraneDistortionCallback = (value: any) => any;
 export type ReactiveMembraneObservableCallback = (value: any) => boolean;
-export type ReactiveMembraneCallableCallback = (obj: any, context: any, args: any) => void;
+export type ReactiveMembraneCallableCallback = (obj: any, key: PropertyKey, args: any[]) => void;
 
 export interface ObservableMembraneInit {
     valueMutated?: ReactiveMembraneMutationCallback;
@@ -76,7 +76,7 @@ const defaultValueMutated: ReactiveMembraneMutationCallback = (obj: any, key: Pr
 };
 const defaultValueDistortion: ReactiveMembraneDistortionCallback = (value: any) => value;
 
-const defaultFunctionCalled: ReactiveMembraneCallableCallback = (obj: any, context: any, args: any) => {
+const defaultFunctionCalled: ReactiveMembraneCallableCallback = (obj: any, key: PropertyKey, args: any[]) => {
     /* do nothing */
 }
 

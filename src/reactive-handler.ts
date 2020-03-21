@@ -94,13 +94,12 @@ export class ReactiveProxyHandler {
     apply(shadowTarget: ReactiveMembraneShadowTarget, thisArg: any, argArray: any[]) {
         const { originalTarget, membrane } = this;
         const originalThis = unwrap(thisArg);
-        // Should array be an exception, though?
-        if (isArray(originalThis)) {
-            return Reflect.apply(originalTarget, thisArg, argArray);
-        }
+        const originalArgArray = argArray.map(x => unwrap(x));
         const { functionCalled } = membrane;
-        functionCalled(originalTarget, originalThis, argArray);
-        return Reflect.apply(originalTarget, originalThis, argArray);
+        const key = originalThis.name;
+        functionCalled(originalThis, key, originalArgArray);
+        const returnValue = originalTarget.apply(originalThis, originalArgArray);
+        return membrane.getProxy(returnValue);
     }
     construct(target: ReactiveMembraneShadowTarget, argArray: any, newTarget?: any): any {
         /* No op */
